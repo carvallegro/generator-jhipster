@@ -1251,6 +1251,8 @@ module.exports = class extends PrivateBase {
     /**
      * Add a new Maven dependency.
      *
+     *      * @param {string} groupId - dependency groupId
+
      * @param {string} groupId - dependency groupId
      * @param {string} artifactId - dependency artifactId
      * @param {string} version - (optional) explicit dependency version number
@@ -1445,6 +1447,7 @@ module.exports = class extends PrivateBase {
     /**
      * A new dependency to build.gradle file in a specific folder.
      *
+     * @param {string} directory - where to find the file
      * @param {string} scope - scope of the new dependency, e.g. compile
      * @param {string} group - maven GroupId
      * @param {string} name - maven ArtifactId
