@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const chalk = require('chalk');
+const databaseTypes = require('jhipster-core').JHipsterDatabaseTypes.Types
 
 const AURORA_DB_PASSORD_REGEX = /^[^@"\/]{8,42}$/; // eslint-disable-line
 const PERF_TO_CONFIG = {
@@ -11,7 +12,8 @@ const PERF_TO_CONFIG = {
         },
         database: {
             instances: 1,
-            size: 'db.t2.small'
+            size: 'db.t2.small',
+            supportedEngines: [databaseTypes.mariadb,databaseTypes.mysql]
         }
     },
     medium: {
@@ -22,7 +24,8 @@ const PERF_TO_CONFIG = {
         },
         database: {
             instances: 1,
-            size: 'db.t2.medium'
+            size: 'db.t2.medium',
+            supportedEngines: [databaseTypes.mariadb,databaseTypes.mysql]
         }
     },
     high: {
@@ -33,7 +36,8 @@ const PERF_TO_CONFIG = {
         },
         database: {
             instances: 2,
-            size: 'db.r4.large'
+            size: 'db.r4.large',
+            supportedEngines: [databaseTypes.mariadb,databaseTypes.mysql,databaseTypes.postgresql]
         }
     }
 };
@@ -200,32 +204,31 @@ function askPerformances() {
 function promptPerformance(config, awsConfig = { performance: 'low' }) {
     if (this.abort) return null;
 
-    const performanceLevels = _.keys(PERF_TO_CONFIG)
+    const prodDatabaseType = config.prodDatabaseType;
+
+    if(prodDatabaseType === databaseTypes.postgresql) {
+        this.log.ok(` ⚠️ Postgresql databases are currently only supported by Aurora on high-performance database instances`);
+    }
+
+    const performanceLevels = _(PERF_TO_CONFIG).keys()
         .map((key) => {
             const perf = PERF_TO_CONFIG[key];
-            return {
-                name: `${_.startCase(key)} Performance \t ${chalk.green(`Task: ${perf.fargate.CPU} CPU Units, ${perf.fargate.memory} Ram, Count: ${perf.fargate.taskCount}`)}\t ${chalk.yellow(`DB: ${perf.database.instances} Instance, Size: ${perf.database.size}`)}`,
-                value: key,
-                short: key
-            };
-        });
-
+            if (perf.database.supportedEngines.includes(prodDatabaseType)) {
+                return {
+                    name: `${_.startCase(key)} Performance \t ${chalk.green(`Task: ${perf.fargate.CPU} CPU Units, ${perf.fargate.memory} Ram, Count: ${perf.fargate.taskCount}`)}\t ${chalk.yellow(`DB: ${perf.database.instances} Instance, Size: ${perf.database.size}`)}`,
+                    value: key,
+                    short: key
+                };
+            }
+        })
+        .compact().value();
     const prompts = [
         {
             type: 'list',
             name: 'performance',
-            message: `${chalk.red(config.baseName)} Please select your performance.`,
+            message: `${chalk.red(config.baseName)} Please select your performance level`,
             choices: performanceLevels,
-            default: awsConfig.performance,
-            validate: (input) => {
-                if (!input) {
-                    return 'You Must choose at least one performance!';
-                }
-                if (input !== 'high' && config.prodDatabaseType === 'postgresql') {
-                    return 'Aurora DB for postgresql is limited to the high performance configuration';
-                }
-                return true;
-            }
+            default: awsConfig.performance
         }
     ];
 
