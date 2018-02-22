@@ -1251,8 +1251,6 @@ module.exports = class extends PrivateBase {
     /**
      * Add a new Maven dependency.
      *
-     *      * @param {string} groupId - dependency groupId
-
      * @param {string} groupId - dependency groupId
      * @param {string} artifactId - dependency artifactId
      * @param {string} version - (optional) explicit dependency version number
