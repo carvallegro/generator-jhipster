@@ -184,6 +184,7 @@ module.exports = class extends BaseGenerator {
             askForSubnets: prompts.askForSubnets,
             askCloudFormation: prompts.askCloudFormation,
             askPerformances: prompts.askPerformances,
+            askScaling: prompts.askScaling,
             retrievePassword() {
                 const done = this.async;
                 // Attempts to retrieve a previously set database password from SSM.
