@@ -1,8 +1,10 @@
 const _ = require('lodash');
 const chalk = require('chalk');
-const databaseTypes = require('jhipster-core').JHipsterDatabaseTypes.Types
+const databaseTypes = require('jhipster-core').JHipsterDatabaseTypes.Types;
 
 const AURORA_DB_PASSORD_REGEX = /^[^@"\/]{8,42}$/; // eslint-disable-line
+const CLOUDFORMATION_STACK_NAME =  /[a-zA-Z][-a-zA-Z0-9]*/; // eslint-disable-line
+
 const SCALING_TO_CONFIG = {
     low: {
         fargate: {
@@ -168,13 +170,7 @@ function askCloudFormation() {
             name: 'cloudFormationName',
             message: 'Please enter your stack\'s name. (must be unique within a region)',
             default: this.aws.cloudFormationName || this.baseName,
-            validate: (input) => {
-                if (input) {
-                    return true;
-                }
-
-                return 'Stack\'s name cannot be empty!';
-            }
+            validate: input => ((_.isEmpty(input) || !input.match(CLOUDFORMATION_STACK_NAME)) ? 'Stack name must contain letters, digits, or hyphens ' : true)
         }
     ];
 
