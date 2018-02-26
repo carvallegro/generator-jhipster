@@ -3,7 +3,7 @@ const chalk = require('chalk');
 const databaseTypes = require('jhipster-core').JHipsterDatabaseTypes.Types;
 
 const AURORA_DB_PASSORD_REGEX = /^[^@"\/]{8,42}$/; // eslint-disable-line
-const CLOUDFORMATION_STACK_NAME =  /[a-zA-Z][-a-zA-Z0-9]*/; // eslint-disable-line
+const CLOUDFORMATION_STACK_NAME = /[a-zA-Z][-a-zA-Z0-9]*/; // eslint-disable-line
 
 const SCALING_TO_CONFIG = {
     low: {
@@ -39,7 +39,7 @@ const PERF_TO_CONFIG = {
         },
         database: {
             size: 'db.t2.small',
-            supportedEngines: [databaseTypes.mariadb,databaseTypes.mysql]
+            supportedEngines: [databaseTypes.mariadb, databaseTypes.mysql]
         }
     },
     medium: {
@@ -49,7 +49,7 @@ const PERF_TO_CONFIG = {
         },
         database: {
             size: 'db.t2.medium',
-            supportedEngines: [databaseTypes.mariadb,databaseTypes.mysql]
+            supportedEngines: [databaseTypes.mariadb, databaseTypes.mysql]
         }
     },
     high: {
@@ -59,7 +59,7 @@ const PERF_TO_CONFIG = {
         },
         database: {
             size: 'db.r4.large',
-            supportedEngines: [databaseTypes.mariadb,databaseTypes.mysql,databaseTypes.postgresql]
+            supportedEngines: [databaseTypes.mariadb, databaseTypes.mysql, databaseTypes.postgresql]
         }
     }
 };
@@ -89,7 +89,7 @@ function setRegionList(regions) {
 }
 
 function _getFriendlyNameFromTag(awsObject) {
-    return _.get(_(awsObject.Tags).find({ Key: 'Name' }), 'Value');
+    return _.get(_(awsObject.Tags).find({Key: 'Name'}), 'Value');
 }
 
 /**
@@ -170,7 +170,13 @@ function askCloudFormation() {
             name: 'cloudFormationName',
             message: 'Please enter your stack\'s name. (must be unique within a region)',
             default: this.aws.cloudFormationName || this.baseName,
-            validate: input => ((_.isEmpty(input) || !input.match(CLOUDFORMATION_STACK_NAME)) ? 'Stack name must contain letters, digits, or hyphens ' : true)
+            validate: input => {
+                if (_.isEmpty(input) || !input.match(CLOUDFORMATION_STACK_NAME)) {
+                    'Stack name must contain letters, digits, or hyphens '
+                } else {
+                    return true;
+                }
+            }
         }
     ];
 
@@ -203,7 +209,7 @@ function askPerformances() {
             return null;
         }
         const config = this.appConfigs[index];
-        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || { baseName: config.baseName };
+        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || {baseName: config.baseName};
         return promptPerformance.call(this, config, awsConfig).then((performance) => {
             awsConfig.performance = performance;
 
@@ -219,25 +225,27 @@ function askPerformances() {
     return chainPromises(0);
 }
 
-function promptPerformance(config, awsConfig = { performance: 'low' }) {
+function promptPerformance(config, awsConfig = {performance: 'low'}) {
     if (this.abort) return null;
 
     const prodDatabaseType = config.prodDatabaseType;
 
-    if(prodDatabaseType === databaseTypes.postgresql) {
-        this.log.ok(` ⚠️ Postgresql databases are currently only supported by Aurora on high-performance database instances`);
+    if (prodDatabaseType === databaseTypes.postgresql) {
+        this.log(` ⚠️ Postgresql databases are currently only supported by Aurora on high-performance database instances`);
     }
 
     const performanceLevels = _(PERF_TO_CONFIG).keys()
         .map((key) => {
             const perf = PERF_TO_CONFIG[key];
-            if (perf.database.supportedEngines.includes(prodDatabaseType)) {
+            const isEngineSupported = perf.database.supportedEngines.includes(prodDatabaseType);
+            if (isEngineSupported) {
                 return {
                     name: `${_.startCase(key)} Performance \t ${chalk.green(`Task: ${perf.fargate.CPU} CPU Units, ${perf.fargate.memory} Ram`)}\t ${chalk.yellow(`DB: Size: ${perf.database.size}`)}`,
                     value: key,
                     short: key
                 };
             }
+            return null;
         })
         .compact().value();
     const prompts = [
@@ -269,10 +277,10 @@ function askScaling() {
             return null;
         }
         const config = this.appConfigs[index];
-        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || { baseName: config.baseName };
+        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || {baseName: config.baseName};
         return promptScaling.call(this, config, awsConfig).then((scaling) => {
             awsConfig.scaling = scaling;
-            awsConfig.fargate = Object.assign({},awsConfig.fargate, SCALING_TO_CONFIG[scaling].fargate);
+            awsConfig.fargate = Object.assign({}, awsConfig.fargate, SCALING_TO_CONFIG[scaling].fargate);
             awsConfig.database = Object.assign({}, awsConfig.database, SCALING_TO_CONFIG[scaling].database);
 
             _.remove(this.aws.apps, a => _.isEqual(a, awsConfig));
@@ -284,7 +292,7 @@ function askScaling() {
     return chainPromises(0);
 }
 
-function promptScaling(config, awsConfig = { scaling: 'low' }) {
+function promptScaling(config, awsConfig = {scaling: 'low'}) {
     if (this.abort) return null;
 
     const scalingLevels = _(SCALING_TO_CONFIG).keys()
@@ -419,7 +427,7 @@ function askForDBPasswords() {
             return null;
         }
         const config = this.appConfigs[index];
-        const appConfig = this.awsFacts.apps.find(a => a.baseName === config.baseName) || { baseName: config.baseName };
+        const appConfig = this.awsFacts.apps.find(a => a.baseName === config.baseName) || {baseName: config.baseName};
         return promptDBPassword.call(this, appConfig).then((password) => {
             appConfig.database_Password = password;
             _.remove(this.awsFacts.apps, a => _.isEqual(a, appConfig));
