@@ -30,7 +30,7 @@ const SCALING_TO_CONFIG = {
             instances: 2
         }
     }
-}
+};
 const PERF_TO_CONFIG = {
     low: {
         fargate: {
@@ -89,7 +89,7 @@ function setRegionList(regions) {
 }
 
 function _getFriendlyNameFromTag(awsObject) {
-    return _.get(_(awsObject.Tags).find({Key: 'Name'}), 'Value');
+    return _.get(_(awsObject.Tags).find({ Key: 'Name' }), 'Value');
 }
 
 /**
@@ -170,12 +170,11 @@ function askCloudFormation() {
             name: 'cloudFormationName',
             message: 'Please enter your stack\'s name. (must be unique within a region)',
             default: this.aws.cloudFormationName || this.baseName,
-            validate: input => {
+            validate: (input) => {
                 if (_.isEmpty(input) || !input.match(CLOUDFORMATION_STACK_NAME)) {
-                    'Stack name must contain letters, digits, or hyphens '
-                } else {
-                    return true;
+                    return 'Stack name must contain letters, digits, or hyphens ';
                 }
+                return true;
             }
         }
     ];
@@ -209,7 +208,7 @@ function askPerformances() {
             return null;
         }
         const config = this.appConfigs[index];
-        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || {baseName: config.baseName};
+        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || { baseName: config.baseName };
         return promptPerformance.call(this, config, awsConfig).then((performance) => {
             awsConfig.performance = performance;
 
@@ -225,13 +224,13 @@ function askPerformances() {
     return chainPromises(0);
 }
 
-function promptPerformance(config, awsConfig = {performance: 'low'}) {
+function promptPerformance(config, awsConfig = { performance: 'low' }) {
     if (this.abort) return null;
 
     const prodDatabaseType = config.prodDatabaseType;
 
     if (prodDatabaseType === databaseTypes.postgresql) {
-        this.log(` ⚠️ Postgresql databases are currently only supported by Aurora on high-performance database instances`);
+        this.log(' ⚠️ Postgresql databases are currently only supported by Aurora on high-performance database instances');
     }
 
     const performanceLevels = _(PERF_TO_CONFIG).keys()
@@ -247,7 +246,8 @@ function promptPerformance(config, awsConfig = {performance: 'low'}) {
             }
             return null;
         })
-        .compact().value();
+        .compact()
+        .value();
     const prompts = [
         {
             type: 'list',
@@ -277,7 +277,7 @@ function askScaling() {
             return null;
         }
         const config = this.appConfigs[index];
-        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || {baseName: config.baseName};
+        const awsConfig = this.aws.apps.find(a => a.baseName === config.baseName) || { baseName: config.baseName };
         return promptScaling.call(this, config, awsConfig).then((scaling) => {
             awsConfig.scaling = scaling;
             awsConfig.fargate = Object.assign({}, awsConfig.fargate, SCALING_TO_CONFIG[scaling].fargate);
@@ -292,7 +292,7 @@ function askScaling() {
     return chainPromises(0);
 }
 
-function promptScaling(config, awsConfig = {scaling: 'low'}) {
+function promptScaling(config, awsConfig = { scaling: 'low' }) {
     if (this.abort) return null;
 
     const scalingLevels = _(SCALING_TO_CONFIG).keys()
@@ -302,7 +302,7 @@ function promptScaling(config, awsConfig = {scaling: 'low'}) {
                 name: `${chalk.green(`${_.startCase(key)} Scaling \t\t Number of Tasks: ${scale.fargate.taskCount}`)}\t ${chalk.yellow(`DB Instances: ${scale.database.instances}`)}`,
                 value: key,
                 short: key
-            }
+            };
         }).value();
     const prompts = [
         {
@@ -314,9 +314,7 @@ function promptScaling(config, awsConfig = {scaling: 'low'}) {
         }
     ];
 
-    return this.prompt(prompts).then((props) => {
-        return props.scaling;
-    });
+    return this.prompt(prompts).then(props => props.scaling);
 }
 
 /**
@@ -427,7 +425,7 @@ function askForDBPasswords() {
             return null;
         }
         const config = this.appConfigs[index];
-        const appConfig = this.awsFacts.apps.find(a => a.baseName === config.baseName) || {baseName: config.baseName};
+        const appConfig = this.awsFacts.apps.find(a => a.baseName === config.baseName) || { baseName: config.baseName };
         return promptDBPassword.call(this, appConfig).then((password) => {
             appConfig.database_Password = password;
             _.remove(this.awsFacts.apps, a => _.isEqual(a, appConfig));
